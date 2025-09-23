@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import Room
-from .serializers import RoomSerializer
+from .serializer import RoomSerializer
 
 @api_view(["GET"])
 def lookup_room(request, code):
