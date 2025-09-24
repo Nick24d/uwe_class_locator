@@ -12,7 +12,7 @@ class Command(BaseCommand):
         json_file = kwargs["json_file"]
 
         with open(json_file, "r", encoding="utf-8") as f:
-            data = rooms.json
+            data = json.load(f)
 
 
         for block_data in data:
