@@ -28,23 +28,26 @@ block_map = {b["block"]: b for b in blocks_template}
 pdf_path = "FR-AtoM-01.pdf"
 doc = fitz.open(pdf_path)
 
-# Regex: room code, short code, colon, room name (possibly multiline)
-room_pattern = re.compile(r'(\b[0-9][A-Z]{1,2}[A-Z]?\d+[A-Z]?\b)\s+\S+\s*:\s*(.+)')
+# Pattern for the start of a room entry
+room_start_pattern = re.compile(r'(\b[0-9][A-Z]{1,2}[A-Z]?\d+[A-Z]?\b)\s+\S+\s*:\s*(.+)')
 
 for page in doc:
-    text = page.get_text()
-    lines = text.splitlines()
-    for i, line in enumerate(lines):
-        match = room_pattern.match(line)
+    lines = page.get_text().splitlines()
+    i = 0
+    while i < len(lines):
+        match = room_start_pattern.match(lines[i])
         if match:
             room_code = match.group(1)
-            room_name = match.group(2).strip()
-            # If the next line is not a new room, append it to the room name
-            j = i + 1
-            while j < len(lines) and not room_pattern.match(lines[j]) and lines[j].strip():
-                room_name += " " + lines[j].strip()
-                j += 1
-            # Determine block letter (first letter after digit)
+            room_name_lines = [match.group(2).strip()]
+            # Collect subsequent lines as part of the room name until a new room or empty line
+            i += 1
+            while i < len(lines):
+                next_line = lines[i].strip()
+                if not next_line or room_start_pattern.match(lines[i]):
+                    break
+                room_name_lines.append(next_line)
+                i += 1
+            room_name = " ".join(room_name_lines)
             block_letter_match = re.match(r'\d+([A-Z])', room_code)
             if block_letter_match:
                 block_letter = block_letter_match.group(1)
@@ -53,6 +56,8 @@ for page in doc:
                         "room_code": room_code,
                         "name": room_name
                     })
+        else:
+            i += 1
 
 # Output as JSON
 with open("rooms_by_block.json", "w") as f:
