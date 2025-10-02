@@ -30,3 +30,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.is_active = False  # User must verify email
         user.save()
         return user
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ["email_verified"]
+
+class UserSerializer(serializers.ModelSerializer):
+    Profile = ProfileSerializer()
+    class Meta:
+        model = User
+        fields = ["username", "email", "Profile"]
